@@ -7,12 +7,18 @@
 
 #include <uEye.h>
 
+typedef enum {
+  CameraStatusConnected,
+  CameraStatusDisconnected,
+} CameraStatus;
+
 typedef struct {
   HIDS hCam;
   unsigned int width;
   unsigned int height;
   char *imagemem;
   unsigned int imagememid;
+  char status;
 } Camera;
 
 /**

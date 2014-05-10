@@ -61,16 +61,22 @@ int cam_connect(Camera *camera) {
 
   camera->imagemem = imagemem;
   camera->imagememid = (unsigned int)imagememid;
+
+  camera->status = CameraStatusConnected;
   return 0;
 }
 
 void cam_disconnect(Camera *camera) {
-  chk(is_FreeImageMem(camera->hCam, 
-                      camera->imagemem,
-                      camera->imagememid));
+  if (camera->status == CameraStatusConnected) {
+    chk(is_FreeImageMem(camera->hCam, 
+                        camera->imagemem,
+                        camera->imagememid));
 
-  chk(is_ExitCamera(camera->hCam));
-  fprintf(stderr, "Disconnected from camera %d\n", camera->hCam);
+    chk(is_ExitCamera(camera->hCam));
+    fprintf(stderr, "Disconnected from camera %d\n", camera->hCam);
+  }
+
+  camera->status = CameraStatusDisconnected;
 }
 
 wchar_t *cam_capture(Camera *camera, wchar_t *path) {
