@@ -12,6 +12,7 @@
  *
  * The program will exit network mode when !EXIT is received.
  */
+
 #include <unistd.h>
 #include <string.h>
 #include <wchar.h>
@@ -19,6 +20,9 @@
 #include <stdlib.h>
 
 #include <zmq.h>
+#if ZMQ_VERSION_MAJOR < 3
+# error ZMQ version 3 or higher is required
+#endif
 
 #include <assert.h>
 
