@@ -9,7 +9,7 @@ Usage
 The main program, `capture` operates in two modes depending on whether a commandline argument is given.
 
 * When invoked without arguments, the `capture` will take a still frame snapshot and save it to `snapshot.bmp`.
-* When invoked with a port number as the only commandline argument, the `capture` programm will listen on the specified 5555 for [`zmq`](http://zeromq.org/) connections.
+* When invoked with a port number as the only commandline argument, the `capture` programm will listen on the specified port for [`zmq`](http://zeromq.org/) connections.
  * When a string is received, `capture` will take a still frame snapshot, and attempt to save it to the file specified by the string. i.e. the string needs to be a valid system path.
  * Upon successfully saving the snapshot, the program responds with `ok`.
  * **Important**: `zmq` is not transport neutral, and you cannnot simply use something like `nc` to talk to the program in network mode. The supplied `client` program should be used intead.
