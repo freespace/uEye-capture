@@ -1,5 +1,5 @@
 TARGET = capture
-LIBS = -lm -lueye_api
+LIBS = -lm -lueye_api -lzmq
 CC = gcc
 CFLAGS = -g -Wall
 
@@ -8,7 +8,7 @@ CFLAGS = -g -Wall
 default: $(TARGET)
 all: default
 
-SRCS = capture.c
+SRCS = capture.c camera.c
 OBJECTS = $(patsubst %.c, %.o, $(SRCS))
 HEADERS = $(wildcard *.h)
 
@@ -20,7 +20,11 @@ HEADERS = $(wildcard *.h)
 $(TARGET): $(OBJECTS)
 		$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
+bench: bench.o camera.o
+		$(CC) $^ -Wall $(LIBS) -o $@
+
 clean:
-		-rm -f *.o
+		-rm -f $(OBJECTS)
 		-rm -f $(TARGET)
+		-rm -f bench
 
