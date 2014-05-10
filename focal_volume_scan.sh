@@ -9,6 +9,8 @@ END=11000
 GOTOPY="../pyAPT/goto.py"
 SERIAL=83815070
 
+echo "Scanning from $START um to $END um at $STEP um intervals"
+
 for z in $(seq $START $STEP $END); do 
     # converts specifications in um and turns it into mm by inserting a . 3
     # position from the end
