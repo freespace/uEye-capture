@@ -1,96 +1,34 @@
+/**
+ * This program when ran without arguments will open the camera and capture
+ * a single frame into snapshot.bmp.
+ *
+ * When ran with a single argument, it will covert that argument into an
+ * integer, and then open an zeromq socket on that port, listening on all
+ * interfaces. This is called network mode.
+ *
+ * In network mode, when it receives a string, which is not expected to be
+ * null terminated, it will interpret that string as a file path. It will then
+ * take a snapshot, and save it to that path.
+ *
+ * The program will exit network mode when !EXIT is received.
+ */
+#include <unistd.h>
+#include <string.h>
+#include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <uEye.h>
+#include <zmq.h>
 
-void chk(int st) {
-  if (st != IS_SUCCESS) {
-    fprintf(stderr, "API Error: %d\n", st);
-    exit(st);
-  }
-}
+#include <assert.h>
 
-HIDS cam_connect(int *widthout, int*heightout) {
-  fprintf(stderr, "Connecting...");
-  HIDS hCam = 0;
+#include "camera.h"
 
-  chk(is_InitCamera(&hCam, NULL));
-
-  fprintf(stderr, "connected to camera: %d\n", hCam);
-
-  SENSORINFO sensinfo;
-  chk(is_GetSensorInfo(hCam, &sensinfo));
-
-  fprintf(stderr, "\tSensor: %s\n"
-                  "\tResolution: %ux%u\n"
-                  "\tPixel Size: %.2f\n",
-                  sensinfo.strSensorName,
-                  sensinfo.nMaxWidth,
-                  sensinfo.nMaxHeight,
-                  sensinfo.wPixelSize/100.0);
-
-  chk(is_GetSensorInfo(hCam, &sensinfo));
-
-  if (widthout) *widthout = sensinfo.nMaxWidth;
-  if (heightout) *heightout = sensinfo.nMaxHeight;
-
-  return hCam;
-}
-
-int main(void) {
-  int width, height;
-  HIDS hCam = cam_connect(&width, &height);
-
-  fprintf(stderr, "Setting color mode\n");
-  // use 8 bits per channel, with 3 channels. Need BGR order for correct
-  // colour display when saving to BMP
-  chk(is_SetColorMode(hCam, IS_CM_BGR8_PACKED));
-
-  // set a low exposure
-  double exposure_ms = 1000;
-  chk(is_Exposure(
-        hCam,
-        IS_EXPOSURE_CMD_SET_EXPOSURE,
-        &exposure_ms,
-        sizeof(exposure_ms)));
-
-
-  fprintf(stderr, "Allocating memory for images\n");
-  char *imagemem = NULL;
-  int imagememid;
-
-  chk(is_AllocImageMem(
-        hCam, 
-        width,
-        height,
-        3*8,      // bits per pixel
-        &imagemem,
-        &imagememid));
-  
-  chk(is_SetImageMem(hCam, imagemem, imagememid));
-
-  fprintf(stderr, "Capturing image\n");
-  chk(is_FreezeVideo(hCam, IS_WAIT));
-
-  wchar_t *outfileame = L"snapshot.bmp";
-
-  fprintf(stderr, "Saving image to %ls\n", outfileame);
-  IMAGE_FILE_PARAMS fparams;
-  fparams.pwchFileName = outfileame;
-  fparams.nFileType = IS_IMG_BMP;
-  fparams.ppcImageMem = &imagemem;
-  fparams.pnImageID = (unsigned int*)&imagememid;
-
-  chk(is_ImageFile(
-        hCam,
-        IS_IMAGE_FILE_CMD_SAVE,
-        &fparams,
-        sizeof(fparams)));
-
-  chk(is_FreeImageMem(hCam, imagemem, imagememid));
-
-  chk(is_ExitCamera(hCam));
-  fprintf(stderr, "Disconnected from camera %d\n", hCam);
+int main(int argc, char **argv) {
+  Camera camera;
+  cam_connect(&camera);
+  cam_capture(&camera, NULL);
+  cam_disconnect(&camera);
 
   return 0;
 }
