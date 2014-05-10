@@ -1,18 +1,3 @@
-/**
- * This program when ran without arguments will open the camera and capture
- * a single frame into snapshot.bmp.
- *
- * When ran with a single argument, it will covert that argument into an
- * integer, and then open an zeromq socket on that port, listening on all
- * interfaces. This is called network mode.
- *
- * In network mode, when it receives a string, which is not expected to be
- * null terminated, it will interpret that string as a file path. It will then
- * take a snapshot, and save it to that path.
- *
- * The program will exit network mode when !EXIT is received.
- */
-
 #include <unistd.h>
 #include <string.h>
 #include <wchar.h>
@@ -65,6 +50,7 @@ int main(int argc, char **argv) {
 
     wchar_t wbuf[(sizeof buf)];
     char *okp = "ok";
+    char *cmd_exit = "@exit";
 
     for (;;) {
       memset(buf, '\0', sizeof buf);
@@ -73,11 +59,17 @@ int main(int argc, char **argv) {
       zmq_recv(responder, buf, (sizeof buf)-1, 0);
       fprintf(stderr, "Got: %s\n", buf);
 
-      mbsrtowcs(wbuf, &bufp, (sizeof buf), NULL);
+      if (strncmp(buf, cmd_exit, strlen(cmd_exit))) {
+        mbsrtowcs(wbuf, &bufp, (sizeof buf), NULL);
 
-      cam_capture(&camera, wbuf);
+        cam_capture(&camera, wbuf);
 
-      zmq_send(responder, okp, strlen(okp), 0);
+        zmq_send(responder, okp, strlen(okp), 0);
+      } else {
+        // do this to allow the client to exit naturally
+        zmq_send(responder, okp, strlen(okp), 0);
+        break;
+      }
     }
 
     zmq_close(responder);
