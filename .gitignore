@@ -1,3 +1,5 @@
 *.bmp
 *.o
+*.swp
 capture
+bench
