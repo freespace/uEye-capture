@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
     wchar_t wbuf[(sizeof buf)];
     char *okp = "ok";
     char *cmd_exit = "@exit";
+    char *cmd_status = "@status";
 
     for (;;) {
       memset(buf, '\0', sizeof buf);
@@ -59,17 +60,26 @@ int main(int argc, char **argv) {
       zmq_recv(responder, buf, (sizeof buf)-1, 0);
       fprintf(stderr, "Got: %s\n", buf);
 
-      if (strncmp(buf, cmd_exit, strlen(cmd_exit))) {
+      if (strncmp(buf, cmd_exit, strlen(cmd_exit)) == 0) {
+        // exit command
+        
+        // do this to allow the client to exit naturally
+        zmq_send(responder, okp, strlen(okp), 0);
+        break;
+      } else if (strncmp, cmd_status, strlen(cmd_status) == 0) {
+        // status command
+
+        // or now the status command is only used to determine if we are
+        // in this loop
+        zmq_send(responder, okp, strlen(okp), 0);
+      } else 
+        // assume we got a filepath, take a snap shot
         mbsrtowcs(wbuf, &bufp, (sizeof buf), NULL);
 
         cam_capture(&camera, wbuf);
 
         zmq_send(responder, okp, strlen(okp), 0);
-      } else {
-        // do this to allow the client to exit naturally
-        zmq_send(responder, okp, strlen(okp), 0);
-        break;
-      }
+      } 
     }
 
     zmq_close(responder);
