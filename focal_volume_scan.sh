@@ -1,15 +1,39 @@
 #!/usr/bin/bash
 
-# These must be specified in um
-START=9000
-STEP=10
-END=11000
-
 # Where pyAPT lives and the serial number of the stage controller
 GOTOPY="../pyAPT/goto.py"
 SERIAL=83815070
 
-echo "Scanning from $START um to $END um at $STEP um intervals"
+if [ $# -ne 4 ]; then
+  echo "Usage: $0 <centre um> <width um> <step um> <data dir>"
+  exit 1
+fi
+
+CENTRE="$1"
+WIDTH="$2"
+STEP="$3"
+DATADIR="$4"
+
+halfwidth=$(($WIDTH/2))
+START=$(($CENTRE-$halfwidth))
+END=$(($CENTRE+$halfwidth))
+
+
+echo
+echo "Using data dir [ $DATADIR ]"
+echo
+echo "Scanning from [ $START ] um to [ $END ] um at [ $STEP ] um intervals"
+echo
+echo "Press [ENTER] to begin"
+read
+
+PORT=5555
+
+pkill capture;
+./capture 5555 &
+
+# this forces the script to wait until the capture is ready
+./client localhost $PORT "@status"
 
 for z in $(seq $START $STEP $END); do 
     # converts specifications in um and turns it into mm by inserting a . 3
@@ -18,10 +42,11 @@ for z in $(seq $START $STEP $END); do
 	
 	echo $z;
 	
-	python "$GOTOPY" $SERIAL $z;
-	./capture;
-	
-	# the capture program currently always outputs snapshot.bmp, so rename it
-	mv snapshot.bmp $z.bmp; 
+	python "$GOTOPY" $SERIAL $z && \
+	./client localhost $PORT "${DATADIR}/$z.bmp"
 done
+
+./client localhost $PORT "@exit"
+sleep 1
+pkill capture
 
