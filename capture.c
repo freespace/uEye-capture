@@ -66,13 +66,13 @@ int main(int argc, char **argv) {
         // do this to allow the client to exit naturally
         zmq_send(responder, okp, strlen(okp), 0);
         break;
-      } else if (strncmp, cmd_status, strlen(cmd_status) == 0) {
+      } else if (strncmp(buf, cmd_status, strlen(cmd_status)) == 0) {
         // status command
 
         // or now the status command is only used to determine if we are
         // in this loop
         zmq_send(responder, okp, strlen(okp), 0);
-      } else 
+      } else {
         // assume we got a filepath, take a snap shot
         mbsrtowcs(wbuf, &bufp, (sizeof buf), NULL);
 
